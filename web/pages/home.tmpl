@@ -1,0 +1,112 @@
+{{ component "layout" . }}
+{{ component "layout_user" . }}
+
+{{ component "block" (props .
+    "Icon" "chart-pie"
+    "Name" "stats"
+    "Desc" "total items found in all watched folders"
+) }}
+    <div class="grid grid-cols-[auto_min-content] gap-2 gap-x-5 text-right">
+        <div class="text-gray-500">folders</div>
+        <div class="font-bold">{{ .Stats.Folders }}</div>
+        <div class="text-gray-500">albums</div>
+        <div class="font-bold">{{ .Stats.Albums }}</div>
+        <div class="text-gray-500">artists</div>
+        <div class="font-bold">{{ .Stats.Artists }}</div>
+        <div class="text-gray-500">album artists</div>
+        <div class="font-bold">{{ .Stats.AlbumArtists }}</div>
+        <div class="text-gray-500">tracks</div>
+        <div class="font-bold">{{ .Stats.Tracks }}</div>
+        <div class="text-gray-500">podcasts</div>
+        <div class="font-bold">{{ .Stats.Podcasts }}</div>
+    </div>
+{{ end }}
+
+{{ component "block" (props .
+    "Icon" "users"
+    "Name" "user management"
+    "Desc" "manage user accounts for subsonic api and web interface access"
+) }}
+<div class="grid grid-cols-[repeat(3,auto)_max-content] md:grid-cols-[auto_repeat(5,min-content)] gap-2 gap-x-5 items-center text-right">
+    {{ range $user := .AllUsers }}
+        <div class="col-span-3 md:col-auto ellipsis">{{ $user.Name }}</div>
+        <div class="text-gray-500 whitespace-nowrap">{{ $user.CreatedAt | date }}</div>
+        {{ component "link" (props . "To" (printf "/admin/change_username?user=%s" $user.Name | path)) }}username{{ end }}
+        {{ component "link" (props . "To" (printf "/admin/change_password?user=%s" $user.Name | path)) }}password{{ end }}
+        {{ component "link" (props . "To" (printf "/admin/change_avatar?user=%s" $user.Name | path)) }}avatar{{ end }}
+        {{ if $user.IsAdmin }}
+            <div class="text-gray-500">delete<span class="hidden md:inline">&#8230;</span></div>
+        {{ else }}
+            {{ component "link" (props . "To" (printf "/admin/delete_user?user=%s" $user.Name | path)) }}delete{{ end }}
+        {{ end }}
+    {{ end }}
+    {{ if .User.IsAdmin }}
+        <div class="col-span-full">{{ component "link" (props . "To" (path "/admin/create_user")) }}create new{{ end }}</div>
+    {{ end }}
+</div>
+{{ end }}
+
+{{ component "block" (props .
+    "Icon" "folder-tree"
+    "Name" "recent folders"
+) }}
+    <div class="grid grid-cols-[1fr,auto] gap-x-3 gap-y-2 items-center justify-items-end">
+        {{ if eq (len .RecentFolders) 0 }}
+            <div class="col-span-full text-gray-500">no folders yet</div>
+        {{ end }}
+        {{ range $folder := .RecentFolders }}
+            <div class="text-left ellipsis">{{ $folder.RightPath }}</div>
+            {{ if not $folder.CreatedAt.IsZero }}
+                 <div class="text-gray-500" title="{{ $folder.CreatedAt }}">{{ $folder.CreatedAt | dateHuman }}</div>
+            {{ else }}
+                 <span></span>
+            {{ end }}
+        {{ end }}
+        {{ if and (not .IsScanning) (.User.IsAdmin) }}
+            {{ if not .LastScanTime.IsZero }}
+                <p class="col-span-full text-gray-500" title="{{ .LastScanTime }}">scanned {{ .LastScanTime | dateHuman }}</p>
+            {{ end }}
+            <form class="col-span-full" action="{{ path "/admin/start_scan_inc_do" }}" method="post">
+                <input type="submit" title="start a incremental scan. gonic will only scan files that have changed since the last scan. it is usually quite fast" value="scan (i)">
+            </form>
+            <form class="col-span-full" action="{{ path "/admin/start_scan_full_do" }}" method="post">
+                <input type="submit" title="start a slow scan. gonic will not check the timestamps of changed files. you generally shouldn't need this" value="scan slow (i)">
+            </form>
+        {{ end }}
+        {{ if .IsScanning }}<p class="text-green-500 col-span-full">scan in progress...</p>{{ end }}
+    </div>
+{{ end }}
+
+{{ if .User.IsAdmin }}
+{{ component "block" (props .
+    "Icon" "rss"
+    "Name" "podcasts"
+    "Desc" "you can add podcasts rss feeds here"
+) }}
+    <div class="grid grid-cols-[auto_auto_min-content] md:grid-cols-[5fr_3fr_auto_auto] gap-2 items-center justify-items-end">
+        {{ range $pref := .Podcasts }}
+            <div class="ellipsis">{{ $pref.Title }}</div>
+            <form class="contents" action="{{ printf "/admin/update_podcast_do?id=%d" $pref.ID | path }}" method="post">
+                <select class="auto-submit" name="setting">
+                    <option value="latest" {{ if eq $pref.AutoDownload "latest" }}selected="selected"{{ end }}>download latest</option>
+                    <option value="none"   {{ if eq (default "none" $pref.AutoDownload) "none" }}selected="selected"{{ end }}>no auto download</option>
+                </select>
+            </form>
+            <form class="hidden md:contents" action="{{ printf "/admin/download_podcast_do?id=%d" $pref.ID | path }}" method="post">
+                <input type="submit" value="download all">
+            </form>
+            <form class="contents" action="{{ printf "/admin/delete_podcast_do?id=%d" $pref.ID | path }}" method="post">
+                <input type="submit" value="delete">
+            </form>
+        {{ end }}
+        <form class="contents" action="{{ path "/admin/add_podcast_do" }}" method="post">
+            <input class="md:col-start-2 col-span-2" type="text" name="feed" placeholder="rss feed url">
+            <input type="submit" value="add new">
+        </form>
+    </div>
+{{ end }}
+{{ end }}
+
+
+{{ end }}
+{{ end }}
