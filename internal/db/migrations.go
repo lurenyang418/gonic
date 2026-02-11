@@ -171,10 +171,7 @@ func migrateMergePlaylist(tx *gorm.DB, _ MigrationContext) error {
 }
 
 func migrateCreateTranscode(tx *gorm.DB, _ MigrationContext) error {
-	return tx.AutoMigrate(
-		TranscodePreference{},
-	).
-		Error
+	return nil
 }
 
 func migrateAddGenre(tx *gorm.DB, _ MigrationContext) error {
@@ -187,41 +184,6 @@ func migrateAddGenre(tx *gorm.DB, _ MigrationContext) error {
 }
 
 func migrateUpdateTranscodePrefIDX(tx *gorm.DB, _ MigrationContext) error {
-	var hasIDX int
-	tx.
-		Select("1").
-		Table("sqlite_master").
-		Where("type = ?", "index").
-		Where("name = ?", "idx_user_id_client").
-		Count(&hasIDX)
-	if hasIDX == 1 {
-		// index already exists
-		return nil
-	}
-
-	step := tx.Exec(`
-		ALTER TABLE transcode_preferences RENAME TO transcode_preferences_orig;
-	`)
-	if err := step.Error; err != nil {
-		return fmt.Errorf("step rename: %w", err)
-	}
-
-	step = tx.AutoMigrate(
-		TranscodePreference{},
-	)
-	if err := step.Error; err != nil {
-		return fmt.Errorf("step create: %w", err)
-	}
-
-	step = tx.Exec(`
-		INSERT INTO transcode_preferences (user_id, client, profile)
-			SELECT user_id, client, profile
-			FROM transcode_preferences_orig;
-		DROP TABLE transcode_preferences_orig;
-	`)
-	if err := step.Error; err != nil {
-		return fmt.Errorf("step copy: %w", err)
-	}
 	return nil
 }
 
@@ -769,10 +731,7 @@ func migrateArtistAppearances(tx *gorm.DB, _ MigrationContext) error {
 }
 
 func migrateAlbumInfo(tx *gorm.DB, _ MigrationContext) error {
-	return tx.AutoMigrate(
-		AlbumInfo{},
-	).
-		Error
+	return nil
 }
 
 func migrateTemporaryDisplayAlbumArtist(tx *gorm.DB, _ MigrationContext) error {

@@ -79,7 +79,7 @@ func main() {
 	flagconf.ParseConfig(*confConfigPath)
 
 	if *confShowVersion {
-		fmt.Printf("v%s\n", version.Version)
+		fmt.Printf("%s\n", version.Version)
 		os.Exit(0)
 	}
 
@@ -142,7 +142,7 @@ func main() {
 		log.Panic("differing multi artist and album artist modes have been tested yet. please set them to be the same")
 	}
 
-	log.Printf("starting gonic v%s\n", version.Version)
+	log.Printf("starting gonic %s\n", version.Version)
 	log.Printf("provided config\n")
 	flag.VisitAll(func(f *flag.Flag) {
 		value := strings.ReplaceAll(f.Value.String(), "\n", "")

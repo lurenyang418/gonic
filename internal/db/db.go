@@ -72,7 +72,7 @@ func (db *DB) InsertBulkLeftMany(table string, head []string, left int, col []in
 }
 
 type Stats struct {
-	Folders, Albums, Artists, AlbumArtists, Tracks, InternetRadioStations, Podcasts uint
+	Folders, Albums, Artists, AlbumArtists, Tracks, Podcasts uint
 }
 
 func (db *DB) Stats() (Stats, error) {
@@ -386,11 +386,7 @@ func (p *PlayQueue) SetItems(items []specid.ID) {
 	p.Items = join(items, ",")
 }
 
-type TranscodePreference struct {
-	UserID  int    `gorm:"not null; unique_index:idx_user_id_client" sql:"default: null; type:int REFERENCES users(id) ON DELETE CASCADE"`
-	Client  string `gorm:"not null; unique_index:idx_user_id_client" sql:"default: null"`
-	Profile string `gorm:"not null" sql:"default: null"`
-}
+
 
 type AlbumArtist struct {
 	AlbumID  int `gorm:"not null; unique_index:idx_album_id_artist_id" sql:"default: null; type:int REFERENCES albums(id) ON DELETE CASCADE"`
@@ -577,14 +573,7 @@ func (p *ArtistInfo) SetSimilarArtists(items []string) { p.SimilarArtists = stri
 func (p *ArtistInfo) GetTopTracks() []string      { return strings.Split(p.TopTracks, ";") }
 func (p *ArtistInfo) SetTopTracks(items []string) { p.TopTracks = strings.Join(items, ";") }
 
-type AlbumInfo struct {
-	ID            int `gorm:"primary_key" sql:"type:int REFERENCES albums(id) ON DELETE CASCADE"`
-	CreatedAt     time.Time
-	UpdatedAt     time.Time `gorm:"index"`
-	Notes         string
-	MusicBrainzID string
-	LastFMURL     string
-}
+
 
 func splitIDs(in, sep string) []specid.ID {
 	if in == "" {
